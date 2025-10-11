@@ -64,39 +64,39 @@ export type Database = {
       }
       chapters: {
         Row: {
-          chapter_number: number
+          chapter_number: number | null
           content_text: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           description: string | null
           id: string
-          name: string
           subject_id: string
           teacher_notes: string | null
+          title: string
           updated_at: string
         }
         Insert: {
-          chapter_number: number
+          chapter_number?: number | null
           content_text?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           description?: string | null
           id?: string
-          name: string
           subject_id: string
           teacher_notes?: string | null
+          title: string
           updated_at?: string
         }
         Update: {
-          chapter_number?: number
+          chapter_number?: number | null
           content_text?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
           id?: string
-          name?: string
           subject_id?: string
           teacher_notes?: string | null
+          title?: string
           updated_at?: string
         }
         Relationships: [
@@ -122,20 +122,31 @@ export type Database = {
           display_order: number
           id: string
           name: string
+          school_id: string | null
         }
         Insert: {
           created_at?: string
           display_order: number
           id?: string
           name: string
+          school_id?: string | null
         }
         Update: {
           created_at?: string
           display_order?: number
           id?: string
           name?: string
+          school_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "grades_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -146,6 +157,8 @@ export type Database = {
           id: string
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          roll_number: string | null
+          school_id: string | null
           updated_at: string
         }
         Insert: {
@@ -156,6 +169,8 @@ export type Database = {
           id: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          roll_number?: string | null
+          school_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -166,9 +181,19 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          roll_number?: string | null
+          school_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_attempts: {
         Row: {
@@ -335,35 +360,23 @@ export type Database = {
       schools: {
         Row: {
           address: string | null
-          city: string | null
-          contact_email: string | null
-          contact_phone: string | null
           created_at: string
           id: string
           name: string
-          state: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
-          city?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
           created_at?: string
           id?: string
           name: string
-          state?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
-          city?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
           created_at?: string
           id?: string
           name?: string
-          state?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -467,6 +480,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          teacher_id: string | null
           updated_at: string
         }
         Insert: {
@@ -476,6 +490,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          teacher_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -485,6 +500,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          teacher_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -493,6 +509,13 @@ export type Database = {
             columns: ["grade_id"]
             isOneToOne: false
             referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subjects_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

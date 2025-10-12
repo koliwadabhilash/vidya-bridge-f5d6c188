@@ -35,35 +35,32 @@ const DashboardLayout = ({ children, userRole }: DashboardLayoutProps) => {
 
       setUser(session.user);
 
-      // Query the correct table based on userRole
-      let profileData = null;
-      if (userRole === "admin") {
-        const { data } = await supabase
-          .from("admins")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        profileData = data;
-      } else if (userRole === "teacher") {
-        const { data } = await supabase
-          .from("teachers")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        profileData = data;
-      } else {
-        const { data } = await supabase
-          .from("students")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        profileData = data;
+      // Check role from user_roles table
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (!roleData || roleData.role !== userRole) {
+        navigate("/auth");
+        return;
       }
+
+      // Query the profile table based on userRole
+      const profileTable = userRole === "admin" ? "admins" 
+                         : userRole === "teacher" ? "teachers" 
+                         : "students";
+
+      const { data: profileData } = await supabase
+        .from(profileTable)
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
 
       if (profileData) {
         setProfile(profileData);
       } else {
-        // User doesn't exist in this role's table, redirect to auth
         navigate("/auth");
       }
     };

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { GraduationCap, Loader2 } from "lucide-react";
 
@@ -14,46 +15,40 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [adminExists, setAdminExists] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check which table the user belongs to
-        const { data: admin } = await supabase
-          .from("admins")
-          .select("id")
-          .eq("id", session.user.id)
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
           .maybeSingle();
-        
-        if (admin) {
+
+        if (roleData?.role === "admin") {
           navigate("/admin-dashboard");
-          return;
-        }
-
-        const { data: teacher } = await supabase
-          .from("teachers")
-          .select("id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (teacher) {
+        } else if (roleData?.role === "teacher") {
           navigate("/teacher-dashboard");
-          return;
-        }
-
-        const { data: student } = await supabase
-          .from("students")
-          .select("id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (student) {
+        } else if (roleData?.role === "student") {
           navigate("/student-dashboard");
         }
       }
     };
+    
+    const checkAdminStatus = async () => {
+      const { data, error } = await supabase.rpc("admin_exists");
+      if (!error) {
+        setAdminExists(data);
+      }
+      setCheckingAdmin(false);
+    };
+    
     checkUser();
+    checkAdminStatus();
   }, [navigate]);
 
 
@@ -70,39 +65,70 @@ const Auth = () => {
       if (error) throw error;
 
       if (data.session) {
-        // Check which table the user belongs to
-        const { data: admin } = await supabase
-          .from("admins")
-          .select("id")
-          .eq("id", data.session.user.id)
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.session.user.id)
           .maybeSingle();
-        
-        if (admin) {
+
+        if (roleData?.role === "admin") {
           navigate("/admin-dashboard");
-          return;
-        }
-
-        const { data: teacher } = await supabase
-          .from("teachers")
-          .select("id")
-          .eq("id", data.session.user.id)
-          .maybeSingle();
-        
-        if (teacher) {
+        } else if (roleData?.role === "teacher") {
           navigate("/teacher-dashboard");
-          return;
-        }
-
-        const { data: student } = await supabase
-          .from("students")
-          .select("id")
-          .eq("id", data.session.user.id)
-          .maybeSingle();
-        
-        if (student) {
+        } else if (roleData?.role === "student") {
           navigate("/student-dashboard");
         }
       }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Double-check admin doesn't exist
+      const { data: exists } = await supabase.rpc("admin_exists");
+      if (exists) {
+        toast({
+          title: "Registration Closed",
+          description: "An administrator already exists.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role: "admin",
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Admin account created successfully! Please sign in.",
+      });
+      
+      // Refresh admin status
+      const { data: newExists } = await supabase.rpc("admin_exists");
+      setAdminExists(newExists || false);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -130,39 +156,110 @@ const Auth = () => {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your.email@school.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Admin Signup</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="your.email@school.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              {checkingAdmin ? (
+                <div className="py-8 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                  <p className="mt-2 text-sm text-muted-foreground">Checking registration status...</p>
+                </div>
+              ) : adminExists ? (
+                <div className="py-8 text-center">
+                  <p className="text-muted-foreground">
+                    Admin registration is closed. Please contact your system administrator.
+                  </p>
+                </div>
               ) : (
-                "Sign In"
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="admin@school.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Minimum 8 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      "Create Admin Account"
+                    )}
+                  </Button>
+                </form>
               )}
-            </Button>
-          </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
 
         <CardFooter className="flex justify-center">

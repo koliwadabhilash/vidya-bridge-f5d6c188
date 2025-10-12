@@ -13,36 +13,17 @@ const Index = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // Check which table the user belongs to
-        const { data: admin } = await supabase
-          .from("admins")
-          .select("id")
-          .eq("id", session.user.id)
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
           .maybeSingle();
-        
-        if (admin) {
+
+        if (roleData?.role === "admin") {
           navigate("/admin-dashboard");
-          return;
-        }
-
-        const { data: teacher } = await supabase
-          .from("teachers")
-          .select("id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (teacher) {
+        } else if (roleData?.role === "teacher") {
           navigate("/teacher-dashboard");
-          return;
-        }
-
-        const { data: student } = await supabase
-          .from("students")
-          .select("id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (student) {
+        } else if (roleData?.role === "student") {
           navigate("/student-dashboard");
         }
       }

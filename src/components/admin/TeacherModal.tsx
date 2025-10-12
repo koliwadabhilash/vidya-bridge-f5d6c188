@@ -50,7 +50,7 @@ export function TeacherModal({ open, onClose, teacher, onSuccess }: TeacherModal
         // For new teachers, we need to create an auth user first
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
-          password: "Teacher@123",
+          password: "abcd",
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
@@ -63,7 +63,7 @@ export function TeacherModal({ open, onClose, teacher, onSuccess }: TeacherModal
         
         if (authError) throw authError;
         
-        toast({ title: "Teacher created successfully with password: Teacher@123" });
+        toast({ title: "Teacher created successfully with password: abcd" });
       }
       
       onSuccess();

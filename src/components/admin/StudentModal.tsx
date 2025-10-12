@@ -76,7 +76,7 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
       } else {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
-          password: "Student@123",
+          password: "abcd",
           options: {
             emailRedirectTo: `${window.location.origin}/`,
             data: {
@@ -99,7 +99,7 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
           if (enrollError) throw enrollError;
         }
         
-        toast({ title: "Student created successfully with password: Student@123" });
+        toast({ title: "Student created successfully with password: abcd" });
       }
       
       onSuccess();

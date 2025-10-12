@@ -35,17 +35,36 @@ const DashboardLayout = ({ children, userRole }: DashboardLayoutProps) => {
 
       setUser(session.user);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
+      // Query the correct table based on userRole
+      let profileData = null;
+      if (userRole === "admin") {
+        const { data } = await supabase
+          .from("admins")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        profileData = data;
+      } else if (userRole === "teacher") {
+        const { data } = await supabase
+          .from("teachers")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        profileData = data;
+      } else {
+        const { data } = await supabase
+          .from("students")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        profileData = data;
+      }
 
       if (profileData) {
         setProfile(profileData);
-        if (profileData.role !== userRole) {
-          navigate(`/${profileData.role}-dashboard`);
-        }
+      } else {
+        // User doesn't exist in this role's table, redirect to auth
+        navigate("/auth");
       }
     };
 

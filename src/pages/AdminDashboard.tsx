@@ -56,11 +56,13 @@ const AdminDashboard = () => {
     const { data: gradesData } = await supabase.from("grades").select("*, schools(name)");
     setGrades(gradesData || []);
 
-    const { data: profilesData } = await supabase.from("profiles").select("*, schools(name)");
-    setStudents(profilesData?.filter(p => p.role === 'student') || []);
-    setTeachers(profilesData?.filter(p => p.role === 'teacher') || []);
+    const { data: studentsData } = await supabase.from("students").select("*, schools(name)");
+    setStudents(studentsData || []);
 
-    const { data: subjectsData } = await supabase.from("subjects").select("*, grades(name), profiles(full_name)");
+    const { data: teachersData } = await supabase.from("teachers").select("*, schools(name)");
+    setTeachers(teachersData || []);
+
+    const { data: subjectsData } = await supabase.from("subjects").select("*, grades(name), teachers(full_name)");
     setSubjects(subjectsData || []);
 
     const { data: chaptersData } = await supabase.from("chapters").select("*, subjects(name)");
@@ -74,8 +76,10 @@ const AdminDashboard = () => {
       const { type, id } = deleteDialog;
       let error;
       
-      if (type === "teacher" || type === "student") {
-        ({ error } = await supabase.from("profiles").delete().eq("id", id));
+      if (type === "teacher") {
+        ({ error } = await supabase.from("teachers").delete().eq("id", id));
+      } else if (type === "student") {
+        ({ error } = await supabase.from("students").delete().eq("id", id));
       } else if (type === "school") {
         ({ error } = await supabase.from("schools").delete().eq("id", id));
       } else if (type === "grade") {

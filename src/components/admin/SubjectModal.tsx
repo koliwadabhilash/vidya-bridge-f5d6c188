@@ -37,9 +37,8 @@ export function SubjectModal({ open, onClose, subject, onSuccess }: SubjectModal
 
   const fetchTeachers = async () => {
     const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "teacher");
+      .from("teachers")
+      .select("id, full_name");
     setTeachers(data || []);
   };
 

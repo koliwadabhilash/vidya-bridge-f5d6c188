@@ -4,13 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, TrendingUp, Award, Clock, CheckCircle2 } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const StudentDashboard = () => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [recentProgress, setRecentProgress] = useState<any[]>([]);
-  const [upcomingQuizzes, setUpcomingQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,22 +49,6 @@ const StudentDashboard = () => {
       .limit(5);
 
     setRecentProgress(progressData || []);
-
-    // Fetch quiz attempts
-    const { data: quizData } = await supabase
-      .from("quiz_attempts")
-      .select(`
-        *,
-        quizzes (
-          title,
-          subjects (name)
-        )
-      `)
-      .eq("student_id", session.user.id)
-      .order("started_at", { ascending: false })
-      .limit(5);
-
-    setUpcomingQuizzes(quizData || []);
     setLoading(false);
   };
 
@@ -91,7 +74,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Enrolled Subjects</CardTitle>
@@ -118,34 +101,19 @@ const StudentDashboard = () => {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quiz Average</CardTitle>
-              <TrendingUp className="h-4 w-4 text-accent" />
+              <CardTitle className="text-sm font-medium">Total Progress</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-accent" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {upcomingQuizzes.length > 0
+                {recentProgress.length > 0
                   ? Math.round(
-                      upcomingQuizzes
-                        .filter(q => q.score !== null)
-                        .reduce((acc, q) => acc + (q.score / q.total_marks) * 100, 0) /
-                        upcomingQuizzes.filter(q => q.score !== null).length
+                      recentProgress.reduce((acc, p) => acc + p.progress_percentage, 0) /
+                        recentProgress.length
                     )
                   : 0}%
               </div>
-              <p className="text-xs text-muted-foreground">Overall performance</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quizzes Taken</CardTitle>
-              <Award className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {upcomingQuizzes.filter(q => q.is_completed).length}
-              </div>
-              <p className="text-xs text-muted-foreground">Completed assessments</p>
+              <p className="text-xs text-muted-foreground">Overall completion</p>
             </CardContent>
           </Card>
         </div>
@@ -190,73 +158,24 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Quizzes */}
+          {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-secondary" />
-                Quiz Performance
-              </CardTitle>
-              <CardDescription>Your recent quiz attempts</CardDescription>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Navigate to key areas</CardDescription>
             </CardHeader>
-            <CardContent>
-              {upcomingQuizzes.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  No quizzes attempted yet
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {upcomingQuizzes.map((quiz) => (
-                    <div key={quiz.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">{quiz.quizzes.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {quiz.quizzes.subjects?.name}
-                        </p>
-                      </div>
-                      {quiz.is_completed ? (
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-primary">
-                            {quiz.score}/{quiz.total_marks}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {Math.round((quiz.score / quiz.total_marks) * 100)}%
-                          </p>
-                        </div>
-                      ) : (
-                        <Badge variant="outline">In Progress</Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <CardContent className="space-y-3">
+              <Button className="w-full justify-start" variant="outline">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Browse Subjects
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <Clock className="mr-2 h-4 w-4" />
+                View Progress
+              </Button>
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with your learning</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Button className="h-auto py-6 flex-col gap-2">
-                <BookOpen className="h-6 w-6" />
-                <span>Browse Subjects</span>
-              </Button>
-              <Button variant="secondary" className="h-auto py-6 flex-col gap-2">
-                <Award className="h-6 w-6" />
-                <span>Take a Quiz</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-6 flex-col gap-2">
-                <TrendingUp className="h-6 w-6" />
-                <span>View Progress</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );

@@ -40,8 +40,8 @@ export function TeacherModal({ open, onClose, teacher, onSuccess }: TeacherModal
     try {
       if (teacher) {
         const { error } = await supabase
-          .from("profiles")
-          .update({ full_name: name, email, school_id: schoolId })
+          .from("teachers")
+          .update({ full_name: name, school_id: schoolId })
           .eq("id", teacher.id);
         
         if (error) throw error;
@@ -50,27 +50,20 @@ export function TeacherModal({ open, onClose, teacher, onSuccess }: TeacherModal
         // For new teachers, we need to create an auth user first
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
-          password: Math.random().toString(36).slice(-8),
+          password: "Teacher@123",
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: name,
-              role: 'teacher'
+              role: 'teacher',
+              school_id: schoolId
             }
           }
         });
         
         if (authError) throw authError;
         
-        if (authData.user) {
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .update({ school_id: schoolId })
-            .eq("id", authData.user.id);
-          
-          if (profileError) throw profileError;
-        }
-        
-        toast({ title: "Teacher created successfully" });
+        toast({ title: "Teacher created successfully with password: Teacher@123" });
       }
       
       onSuccess();

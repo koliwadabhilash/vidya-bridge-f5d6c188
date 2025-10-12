@@ -3,13 +3,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Users, FileText, TrendingUp, Plus, Clock } from "lucide-react";
+import { BookOpen, Users, TrendingUp, Plus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const TeacherDashboard = () => {
   const [chapters, setChapters] = useState<any[]>([]);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
@@ -37,20 +36,6 @@ const TeacherDashboard = () => {
       .limit(5);
 
     setChapters(chaptersData || []);
-
-    // Fetch quizzes
-    const { data: quizzesData } = await supabase
-      .from("quizzes")
-      .select(`
-        *,
-        subjects (name),
-        chapters (name)
-      `)
-      .eq("created_by", session.user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    setQuizzes(quizzesData || []);
 
     // Fetch all subjects
     const { data: subjectsData } = await supabase
@@ -102,15 +87,11 @@ const TeacherDashboard = () => {
               <Plus className="h-4 w-4" />
               Create Chapter
             </Button>
-            <Button variant="secondary" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Quiz
-            </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Chapters</CardTitle>
@@ -119,17 +100,6 @@ const TeacherDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">{chapters.length}</div>
               <p className="text-xs text-muted-foreground">Content created</p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-secondary">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quizzes Created</CardTitle>
-              <FileText className="h-4 w-4 text-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{quizzes.length}</div>
-              <p className="text-xs text-muted-foreground">Assessments available</p>
             </CardContent>
           </Card>
 
@@ -187,81 +157,53 @@ const TeacherDashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Recent Chapters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Recent Chapters
-              </CardTitle>
-              <CardDescription>Your latest content uploads</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {chapters.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Create your first chapter to get started
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {chapters.map((chapter) => (
-                    <div key={chapter.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-accent/5 transition-colors">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">{chapter.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {chapter.subjects.name} • {chapter.subjects.grades.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(chapter.created_at).toLocaleDateString()}
-                        </p>
+        {/* Recent Chapters */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Recent Chapters
+            </CardTitle>
+            <CardDescription>Your latest content uploads</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {chapters.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">No chapters created yet</p>
+                <Button className="mt-4" variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Chapter
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {chapters.map((chapter) => (
+                  <div
+                    key={chapter.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-sm">{chapter.title}</h4>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{chapter.subjects?.name}</span>
+                        <span>•</span>
+                        <span>{chapter.subjects?.grades?.name}</span>
+                        <span>•</span>
+                        <span>{new Date(chapter.created_at).toLocaleDateString()}</span>
                       </div>
-                      <Button variant="ghost" size="sm">Edit</Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Recent Quizzes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-secondary" />
-                Recent Quizzes
-              </CardTitle>
-              <CardDescription>Your latest assessments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {quizzes.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Create your first quiz to assess students
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {quizzes.map((quiz) => (
-                    <div key={quiz.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-accent/5 transition-colors">
-                      <div className="space-y-1 flex-1">
-                        <p className="text-sm font-medium">{quiz.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {quiz.subjects?.name || quiz.chapters?.name}
-                        </p>
-                        <div className="flex gap-2 mt-2">
-                          <Badge variant="outline">{quiz.total_marks} marks</Badge>
-                          {quiz.duration_minutes && (
-                            <Badge variant="outline">{quiz.duration_minutes} min</Badge>
-                          )}
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">View</Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <Clock className="mr-2 h-3 w-3" />
+                        View
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

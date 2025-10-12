@@ -57,8 +57,8 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
     try {
       if (student) {
         const { error } = await supabase
-          .from("profiles")
-          .update({ full_name: name, email, roll_number: rollNumber, school_id: schoolId })
+          .from("students")
+          .update({ full_name: name, roll_number: rollNumber, school_id: schoolId, grade_id: gradeId })
           .eq("id", student.id);
         
         if (error) throw error;
@@ -76,11 +76,15 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
       } else {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
-          password: Math.random().toString(36).slice(-8),
+          password: "Student@123",
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               full_name: name,
-              role: 'student'
+              role: 'student',
+              school_id: schoolId,
+              grade_id: gradeId,
+              roll_number: rollNumber
             }
           }
         });
@@ -88,13 +92,6 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
         if (authError) throw authError;
         
         if (authData.user) {
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .update({ roll_number: rollNumber, school_id: schoolId })
-            .eq("id", authData.user.id);
-          
-          if (profileError) throw profileError;
-          
           const { error: enrollError } = await supabase
             .from("student_enrollments")
             .insert({ student_id: authData.user.id, grade_id: gradeId, school_id: schoolId });
@@ -102,7 +99,7 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
           if (enrollError) throw enrollError;
         }
         
-        toast({ title: "Student created successfully" });
+        toast({ title: "Student created successfully with password: Student@123" });
       }
       
       onSuccess();

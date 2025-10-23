@@ -41,50 +41,40 @@ export type Database = {
         }
         Relationships: []
       }
-      chapter_files: {
+      chapter_slides: {
         Row: {
           chapter_id: string
+          content: Json
+          content_type: string
           created_at: string
-          file_name: string
-          file_size: number | null
-          file_type: string
-          file_url: string
           id: string
-          uploaded_by: string
+          slide_number: number
+          updated_at: string
         }
         Insert: {
           chapter_id: string
+          content?: Json
+          content_type: string
           created_at?: string
-          file_name: string
-          file_size?: number | null
-          file_type: string
-          file_url: string
           id?: string
-          uploaded_by: string
+          slide_number: number
+          updated_at?: string
         }
         Update: {
           chapter_id?: string
+          content?: Json
+          content_type?: string
           created_at?: string
-          file_name?: string
-          file_size?: number | null
-          file_type?: string
-          file_url?: string
           id?: string
-          uploaded_by?: string
+          slide_number?: number
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "chapter_files_chapter_id_fkey"
+            foreignKeyName: "chapter_slides_chapter_id_fkey"
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chapter_files_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -93,41 +83,34 @@ export type Database = {
         Row: {
           chapter_number: number | null
           created_at: string
-          created_by: string | null
           description: string | null
           id: string
           subject_id: string
           title: string
+          total_slides: number
           updated_at: string
         }
         Insert: {
           chapter_number?: number | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           id?: string
           subject_id: string
           title: string
+          total_slides?: number
           updated_at?: string
         }
         Update: {
           chapter_number?: number | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           id?: string
           subject_id?: string
           title?: string
+          total_slides?: number
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "chapters_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "chapters_subject_id_fkey"
             columns: ["subject_id"]
@@ -192,97 +175,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      student_enrollments: {
-        Row: {
-          enrolled_at: string
-          grade_id: string
-          id: string
-          school_id: string | null
-          student_id: string
-        }
-        Insert: {
-          enrolled_at?: string
-          grade_id: string
-          id?: string
-          school_id?: string | null
-          student_id: string
-        }
-        Update: {
-          enrolled_at?: string
-          grade_id?: string
-          id?: string
-          school_id?: string | null
-          student_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_enrollments_grade_id_fkey"
-            columns: ["grade_id"]
-            isOneToOne: false
-            referencedRelation: "grades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_enrollments_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_enrollments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_progress: {
-        Row: {
-          chapter_id: string
-          completed_at: string | null
-          id: string
-          last_viewed_at: string
-          progress_percentage: number
-          student_id: string
-          teacher_feedback: string | null
-        }
-        Insert: {
-          chapter_id: string
-          completed_at?: string | null
-          id?: string
-          last_viewed_at?: string
-          progress_percentage?: number
-          student_id: string
-          teacher_feedback?: string | null
-        }
-        Update: {
-          chapter_id?: string
-          completed_at?: string | null
-          id?: string
-          last_viewed_at?: string
-          progress_percentage?: number
-          student_id?: string
-          teacher_feedback?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_progress_chapter_id_fkey"
-            columns: ["chapter_id"]
-            isOneToOne: false
-            referencedRelation: "chapters"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_progress_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       students: {
         Row: {
@@ -377,6 +269,90 @@ export type Database = {
           },
         ]
       }
+      teacher_grade_assignments: {
+        Row: {
+          assigned_at: string
+          grade_id: string
+          id: string
+          teacher_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          grade_id: string
+          id?: string
+          teacher_id: string
+        }
+        Update: {
+          assigned_at?: string
+          grade_id?: string
+          id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_grade_assignments_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_grade_assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_progress: {
+        Row: {
+          chapter_id: string
+          completed_at: string | null
+          completed_slides: number
+          current_slide: number
+          id: string
+          is_completed: boolean
+          last_viewed_at: string
+          teacher_id: string
+        }
+        Insert: {
+          chapter_id: string
+          completed_at?: string | null
+          completed_slides?: number
+          current_slide?: number
+          id?: string
+          is_completed?: boolean
+          last_viewed_at?: string
+          teacher_id: string
+        }
+        Update: {
+          chapter_id?: string
+          completed_at?: string | null
+          completed_slides?: number
+          current_slide?: number
+          id?: string
+          is_completed?: boolean
+          last_viewed_at?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_progress_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_progress_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teachers: {
         Row: {
           created_at: string
@@ -441,9 +417,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_exists: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
+      admin_exists: { Args: never; Returns: boolean }
+      get_teacher_unlocked_chapters: {
+        Args: { _teacher_id: string }
+        Returns: {
+          chapter_id: string
+          chapter_title: string
+          grade_name: string
+          is_completed: boolean
+          is_unlocked: boolean
+          progress_percentage: number
+          subject_name: string
+        }[]
       }
       get_user_role: {
         Args: { _user_id: string }

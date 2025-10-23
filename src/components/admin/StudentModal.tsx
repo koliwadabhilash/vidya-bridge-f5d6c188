@@ -63,15 +63,6 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
         
         if (error) throw error;
         
-        // Update enrollment if grade changed
-        if (gradeId) {
-          const { error: enrollError } = await supabase
-            .from("student_enrollments")
-            .upsert({ student_id: student.id, grade_id: gradeId, school_id: schoolId });
-          
-          if (enrollError) throw enrollError;
-        }
-        
         toast({ title: "Student updated successfully" });
       } else {
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -90,14 +81,6 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
         });
         
         if (authError) throw authError;
-        
-        if (authData.user) {
-          const { error: enrollError } = await supabase
-            .from("student_enrollments")
-            .insert({ student_id: authData.user.id, grade_id: gradeId, school_id: schoolId });
-          
-          if (enrollError) throw enrollError;
-        }
         
         toast({ title: "Student created successfully with password: abcdef" });
       }

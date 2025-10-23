@@ -21,17 +21,18 @@ const TeacherDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Fetch chapters created by teacher
+    // Fetch chapters for subjects taught by this teacher
     const { data: chaptersData } = await supabase
       .from("chapters")
       .select(`
         *,
-        subjects (
+        subjects!inner (
           name,
+          teacher_id,
           grades (name)
         )
       `)
-      .eq("created_by", session.user.id)
+      .eq("subjects.teacher_id", session.user.id)
       .order("created_at", { ascending: false })
       .limit(5);
 

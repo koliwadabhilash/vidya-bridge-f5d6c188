@@ -20,35 +20,22 @@ const StudentDashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Fetch enrollments with grades
-    const { data: enrollmentData } = await supabase
-      .from("student_enrollments")
+    // Fetch student data with grade
+    const { data: studentData } = await supabase
+      .from("students")
       .select(`
         *,
         grades (*)
       `)
-      .eq("student_id", session.user.id);
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-    setEnrollments(enrollmentData || []);
+    if (studentData) {
+      setEnrollments([{ ...studentData, grades: studentData.grades }]);
+    }
 
-    // Fetch recent progress
-    const { data: progressData } = await supabase
-      .from("student_progress")
-      .select(`
-        *,
-        chapters (
-          name,
-          subjects (
-            name,
-            grades (name)
-          )
-        )
-      `)
-      .eq("student_id", session.user.id)
-      .order("last_viewed_at", { ascending: false })
-      .limit(5);
-
-    setRecentProgress(progressData || []);
+    // Note: Student progress features coming in future version
+    setRecentProgress([]);
     setLoading(false);
   };
 

@@ -29,7 +29,12 @@ serve(async (req) => {
       })
     }
 
-    const { data: roleData } = await supabase
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
+
+    const { data: roleData } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
@@ -46,11 +51,6 @@ serve(async (req) => {
     const { email, password, full_name, role, school_id, grade_id, roll_number } = await req.json()
 
     console.log('Creating user:', { email, role, school_id })
-
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
 
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,

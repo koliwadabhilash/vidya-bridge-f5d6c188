@@ -76,21 +76,25 @@ const AdminDashboard = () => {
       const { type, id } = deleteDialog;
       let error;
       
-      if (type === "teacher") {
-        ({ error } = await supabase.from("teachers").delete().eq("id", id));
-      } else if (type === "student") {
-        ({ error } = await supabase.from("students").delete().eq("id", id));
+      if (type === "teacher" || type === "student") {
+        const response = await supabase.functions.invoke('delete-user', {
+          body: { user_id: id },
+        });
+        
+        if (response.error) throw new Error(response.error.message || 'Failed to delete user');
       } else if (type === "school") {
         ({ error } = await supabase.from("schools").delete().eq("id", id));
+        if (error) throw error;
       } else if (type === "grade") {
         ({ error } = await supabase.from("grades").delete().eq("id", id));
+        if (error) throw error;
       } else if (type === "subject") {
         ({ error } = await supabase.from("subjects").delete().eq("id", id));
+        if (error) throw error;
       } else if (type === "chapter") {
         ({ error } = await supabase.from("chapters").delete().eq("id", id));
+        if (error) throw error;
       }
-      
-      if (error) throw error;
       
       toast({ title: `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully` });
       fetchDashboardData();

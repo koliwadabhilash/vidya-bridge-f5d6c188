@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 interface ChapterWithProgress {
   chapter_id: string;
+  chapter_number: number;
   chapter_title: string;
   subject_name: string;
   grade_name: string;
@@ -89,15 +90,10 @@ const TeacherDashboard = () => {
       subject.chapters.push(chapter);
     });
 
-    // Sort chapters by chapter number (implied by order)
+    // Sort chapters by chapter number
     gradesMap.forEach(grade => {
       grade.subjects.forEach(subject => {
-        subject.chapters.sort((a, b) => {
-          // Extract chapter numbers from titles if available
-          const aNum = parseInt(a.chapter_title.match(/\d+/)?.[0] || '0');
-          const bNum = parseInt(b.chapter_title.match(/\d+/)?.[0] || '0');
-          return aNum - bNum;
-        });
+        subject.chapters.sort((a, b) => a.chapter_number - b.chapter_number);
       });
     });
 
@@ -243,10 +239,10 @@ const TeacherDashboard = () => {
                                         ) : (
                                           <Lock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                          <h5 className="font-semibold text-sm mb-1">
-                                            {chapter.chapter_title}
-                                          </h5>
+                                         <div className="flex-1 min-w-0">
+                                           <h5 className="font-semibold text-sm mb-1">
+                                             Chapter {chapter.chapter_number}: {chapter.chapter_title}
+                                           </h5>
                                           {chapter.is_unlocked && (
                                             <div className="space-y-2 mt-2">
                                               <div className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -422,6 +422,7 @@ export type Database = {
         Args: { _teacher_id: string }
         Returns: {
           chapter_id: string
+          chapter_number: number
           chapter_title: string
           grade_name: string
           is_completed: boolean

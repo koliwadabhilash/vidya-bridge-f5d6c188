@@ -65,22 +65,21 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
         
         toast({ title: "Student updated successfully" });
       } else {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password: "abcdef",
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: name,
-              role: 'student',
-              school_id: schoolId,
-              grade_id: gradeId,
-              roll_number: rollNumber
-            }
-          }
-        });
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (authError) throw authError;
+        const response = await supabase.functions.invoke('create-user', {
+          body: {
+            email,
+            password: 'abcdef',
+            full_name: name,
+            role: 'student',
+            school_id: schoolId,
+            grade_id: gradeId,
+            roll_number: rollNumber,
+          },
+        });
+
+        if (response.error) throw new Error(response.error.message || 'Failed to create student');
         
         toast({ title: "Student created successfully with password: abcdef" });
       }

@@ -560,7 +560,7 @@ const AdminDashboard = () => {
                     <TableRow key={subject.id}>
                       <TableCell className="font-medium">{subject.name}</TableCell>
                       <TableCell>{subject.grades?.name || "-"}</TableCell>
-                      <TableCell>{subject.profiles?.full_name || "-"}</TableCell>
+                      <TableCell>{subject.teachers?.full_name || "-"}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button size="sm" variant="outline" onClick={() => setSubjectModal({ open: true, subject })}>
                           <Edit className="h-3 w-3" />

@@ -6,12 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
+import { PDFViewer } from "@/components/PDFViewer";
 
 interface Slide {
   id: string;
   slide_number: number;
   content_type: string;
-  content: any;
+  file_path: string;
 }
 
 interface Chapter {
@@ -152,57 +153,34 @@ export default function ChapterViewer() {
       );
     }
 
+    // Generate public URL for the file
+    const { data } = supabase.storage
+      .from('chapter-slides')
+      .getPublicUrl(slide.file_path);
+    
+    const fileUrl = data.publicUrl;
+
     switch (slide.content_type) {
-      case 'text':
-        return (
-          <div className="prose prose-lg max-w-none">
-            <h2 className="text-2xl font-bold mb-4">{slide.content.title}</h2>
-            <p className="text-foreground/80 whitespace-pre-wrap">{slide.content.body}</p>
-          </div>
-        );
+      case 'pdf':
+        return <PDFViewer fileUrl={fileUrl} />;
       case 'image':
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">{slide.content.title}</h2>
+          <div className="flex justify-center">
             <img 
-              src={slide.content.url} 
-              alt={slide.content.caption || ''} 
+              src={fileUrl} 
+              alt={`Slide ${slide.slide_number}`} 
               className="max-w-full h-auto rounded-lg"
             />
-            {slide.content.caption && (
-              <p className="text-sm text-muted-foreground text-center">{slide.content.caption}</p>
-            )}
           </div>
         );
       case 'video':
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold">{slide.content.title}</h2>
             <video 
-              src={slide.content.url} 
+              src={fileUrl} 
               controls 
               className="w-full rounded-lg"
             />
-            {slide.content.description && (
-              <p className="text-foreground/80">{slide.content.description}</p>
-            )}
-          </div>
-        );
-      case 'quiz':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">{slide.content.question}</h2>
-            <div className="space-y-2">
-              {slide.content.options?.map((option: string, index: number) => (
-                <Button 
-                  key={index} 
-                  variant="outline" 
-                  className="w-full justify-start text-left"
-                >
-                  {option}
-                </Button>
-              ))}
-            </div>
           </div>
         );
       default:

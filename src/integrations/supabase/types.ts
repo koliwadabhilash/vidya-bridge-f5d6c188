@@ -44,27 +44,27 @@ export type Database = {
       chapter_slides: {
         Row: {
           chapter_id: string
-          content: Json
           content_type: string
           created_at: string
+          file_path: string
           id: string
           slide_number: number
           updated_at: string
         }
         Insert: {
           chapter_id: string
-          content?: Json
           content_type: string
           created_at?: string
+          file_path: string
           id?: string
           slide_number: number
           updated_at?: string
         }
         Update: {
           chapter_id?: string
-          content?: Json
           content_type?: string
           created_at?: string
+          file_path?: string
           id?: string
           slide_number?: number
           updated_at?: string
@@ -262,42 +262,6 @@ export type Database = {
           },
           {
             foreignKeyName: "subjects_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      teacher_grade_assignments: {
-        Row: {
-          assigned_at: string
-          grade_id: string
-          id: string
-          teacher_id: string
-        }
-        Insert: {
-          assigned_at?: string
-          grade_id: string
-          id?: string
-          teacher_id: string
-        }
-        Update: {
-          assigned_at?: string
-          grade_id?: string
-          id?: string
-          teacher_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_grade_assignments_grade_id_fkey"
-            columns: ["grade_id"]
-            isOneToOne: false
-            referencedRelation: "grades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_grade_assignments_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers"

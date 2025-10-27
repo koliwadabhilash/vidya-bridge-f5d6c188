@@ -13,6 +13,7 @@ import { TeacherModal } from "@/components/admin/TeacherModal";
 import { StudentModal } from "@/components/admin/StudentModal";
 import { SubjectModal } from "@/components/admin/SubjectModal";
 import { ChapterModal } from "@/components/admin/ChapterModal";
+import { SlideUploadModal } from "@/components/admin/SlideUploadModal";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ const AdminDashboard = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [chapters, setChapters] = useState<any[]>([]);
+  const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   
@@ -41,7 +43,8 @@ const AdminDashboard = () => {
   const [studentModal, setStudentModal] = useState<{ open: boolean; student: any }>({ open: false, student: null });
   const [subjectModal, setSubjectModal] = useState<{ open: boolean; subject: any }>({ open: false, subject: null });
   const [chapterModal, setChapterModal] = useState<{ open: boolean; chapter: any }>({ open: false, chapter: null });
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: string; id: string }>({ open: false, type: "", id: "" });
+  const [slideUploadModal, setSlideUploadModal] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: string; id: string; filePath?: string }>({ open: false, type: "", id: "" });
   
   const { toast } = useToast();
 
@@ -68,12 +71,15 @@ const AdminDashboard = () => {
     const { data: chaptersData } = await supabase.from("chapters").select("*, subjects(name)");
     setChapters(chaptersData || []);
 
+    const { data: slidesData } = await supabase.from("chapter_slides").select("*, chapters(title, subjects(name))");
+    setSlides(slidesData || []);
+
     setLoading(false);
   };
 
   const handleDelete = async () => {
     try {
-      const { type, id } = deleteDialog;
+      const { type, id, filePath } = deleteDialog;
       let error;
       
       if (type === "teacher" || type === "student") {
@@ -93,6 +99,18 @@ const AdminDashboard = () => {
         if (error) throw error;
       } else if (type === "chapter") {
         ({ error } = await supabase.from("chapters").delete().eq("id", id));
+        if (error) throw error;
+      } else if (type === "slide") {
+        // Delete file from storage
+        if (filePath) {
+          const { error: storageError } = await supabase.storage
+            .from('chapter-slides')
+            .remove([filePath]);
+          if (storageError) console.error("Storage delete error:", storageError);
+        }
+        
+        // Delete from database
+        ({ error } = await supabase.from("chapter_slides").delete().eq("id", id));
         if (error) throw error;
       }
       
@@ -146,7 +164,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="schools">Schools</TabsTrigger>
           <TabsTrigger value="grades">Grades</TabsTrigger>
@@ -154,6 +172,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>
           <TabsTrigger value="chapters">Chapters</TabsTrigger>
+          <TabsTrigger value="slides">Slides</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -616,6 +635,55 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="slides">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Slides</CardTitle>
+                <Button onClick={() => setSlideUploadModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" /> Upload Slide
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Chapter</TableHead>
+                    <TableHead>Slide #</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>File</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {slides.map((slide) => (
+                    <TableRow key={slide.id}>
+                      <TableCell className="font-medium">{slide.chapters?.title || "-"}</TableCell>
+                      <TableCell>{slide.slide_number}</TableCell>
+                      <TableCell>
+                        {slide.content_type === 'pdf' && '📄 PDF'}
+                        {slide.content_type === 'image' && '🖼️ Image'}
+                        {slide.content_type === 'video' && '🎥 Video'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{slide.file_path}</TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={() => setDeleteDialog({ open: true, type: "slide", id: slide.id, filePath: slide.file_path })}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <SchoolModal {...schoolModal} onClose={() => setSchoolModal({ open: false, school: null })} onSuccess={fetchDashboardData} />
@@ -624,6 +692,7 @@ const AdminDashboard = () => {
       <StudentModal {...studentModal} onClose={() => setStudentModal({ open: false, student: null })} onSuccess={fetchDashboardData} />
       <SubjectModal {...subjectModal} onClose={() => setSubjectModal({ open: false, subject: null })} onSuccess={fetchDashboardData} />
       <ChapterModal {...chapterModal} onClose={() => setChapterModal({ open: false, chapter: null })} onSuccess={fetchDashboardData} />
+      <SlideUploadModal open={slideUploadModal} onClose={() => setSlideUploadModal(false)} onSuccess={fetchDashboardData} />
 
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, type: "", id: "" })}>
         <AlertDialogContent>

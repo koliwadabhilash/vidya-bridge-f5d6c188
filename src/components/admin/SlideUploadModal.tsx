@@ -20,6 +20,7 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [nextSlideNumber, setNextSlideNumber] = useState<number>(1);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -27,6 +28,23 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
       fetchChapters();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (selectedChapter) {
+      fetchNextSlideNumber();
+    }
+  }, [selectedChapter]);
+
+  const fetchNextSlideNumber = async () => {
+    const { data } = await supabase
+      .from("chapter_slides")
+      .select("slide_number")
+      .eq("chapter_id", selectedChapter)
+      .order("slide_number", { ascending: false })
+      .limit(1);
+    
+    setNextSlideNumber(data && data.length > 0 ? data[0].slide_number + 1 : 1);
+  };
 
   const fetchChapters = async () => {
     const { data } = await supabase
@@ -82,21 +100,10 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
     setUploadProgress(0);
 
     try {
-      // Get next slide number
-      const { data: existingSlides } = await supabase
-        .from("chapter_slides")
-        .select("slide_number")
-        .eq("chapter_id", selectedChapter)
-        .order("slide_number", { ascending: false })
-        .limit(1);
-
-      const nextSlideNumber = existingSlides && existingSlides.length > 0 
-        ? existingSlides[0].slide_number + 1 
-        : 1;
-
-      // Generate unique filename
+      // Generate unique filename with timestamp to prevent conflicts
       const fileExt = file.name.split('.').pop();
-      const fileName = `${selectedChapter}-slide-${nextSlideNumber}.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${selectedChapter}-slide-${nextSlideNumber}-${timestamp}.${fileExt}`;
       const filePath = fileName;
 
       setUploadProgress(30);
@@ -106,10 +113,12 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
         .from('chapter-slides')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      }
 
       setUploadProgress(60);
 
@@ -126,7 +135,11 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
           file_path: filePath
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // Cleanup: Delete uploaded file if database insert fails
+        await supabase.storage.from('chapter-slides').remove([filePath]);
+        throw new Error(`Database insert failed: ${insertError.message}`);
+      }
 
       setUploadProgress(80);
 
@@ -199,9 +212,14 @@ export function SlideUploadModal({ open, onClose, onSuccess }: SlideUploadModalP
             </p>
           </div>
 
-          {file && (
-            <div className="text-sm text-muted-foreground">
-              Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+          {file && selectedChapter && (
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">
+                Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+              </div>
+              <div className="text-sm font-medium text-primary">
+                This will be uploaded as Slide #{nextSlideNumber}
+              </div>
             </div>
           )}
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -20,44 +20,19 @@ export function PDFViewer({ fileUrl }: PDFViewerProps) {
     setPageNumber(1);
   }
 
-  const goToPrevPage = () => setPageNumber(prev => Math.max(prev - 1, 1));
-  const goToNextPage = () => setPageNumber(prev => Math.min(prev + 1, numPages));
   const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 2.0));
   const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.6));
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <div className="flex items-center gap-2 flex-wrap justify-center">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToPrevPage}
-            disabled={pageNumber <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Page {pageNumber} of {numPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={zoomOut} disabled={scale <= 0.6}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">{Math.round(scale * 100)}%</span>
-          <Button variant="outline" size="sm" onClick={zoomIn} disabled={scale >= 2.0}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={zoomOut} disabled={scale <= 0.6}>
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <span className="text-sm">{Math.round(scale * 100)}%</span>
+        <Button variant="outline" size="sm" onClick={zoomIn} disabled={scale >= 2.0}>
+          <ZoomIn className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="border rounded-lg overflow-auto max-h-[600px] bg-muted/30">
@@ -78,6 +53,8 @@ export function PDFViewer({ fileUrl }: PDFViewerProps) {
           <Page
             pageNumber={pageNumber}
             scale={scale}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
             loading={
               <div className="flex items-center justify-center p-12">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 import { PDFViewer } from "@/components/PDFViewer";
@@ -140,6 +140,15 @@ export default function ChapterViewer() {
     }
   };
 
+  const handleFinish = () => {
+    // Move past the last slide to mark as completed
+    setCurrentSlide((chapter?.total_slides || 0) + 1);
+    // Navigate back to dashboard after a brief moment
+    setTimeout(() => {
+      navigate("/teacher-dashboard");
+    }, 500);
+  };
+
   const getCurrentSlideData = () => {
     return slides.find(s => s.slide_number === currentSlide);
   };
@@ -246,13 +255,17 @@ export default function ChapterViewer() {
             <ChevronLeft className="h-4 w-4 mr-2" />
             Previous
           </Button>
-          <Button
-            onClick={handleNext}
-            disabled={currentSlide >= (chapter?.total_slides || 0)}
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-2" />
-          </Button>
+          {currentSlide >= (chapter?.total_slides || 0) ? (
+            <Button onClick={handleFinish}>
+              Finish Chapter
+              <Check className="h-4 w-4 ml-2" />
+            </Button>
+          ) : (
+            <Button onClick={handleNext}>
+              Next
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
       </div>
     </DashboardLayout>

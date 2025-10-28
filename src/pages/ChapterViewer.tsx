@@ -98,8 +98,8 @@ export default function ChapterViewer() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !chapter) return;
 
-      const completedSlides = currentSlide;
-      const isCompleted = currentSlide >= chapter.total_slides;
+      const completedSlides = currentSlide - 1;
+      const isCompleted = currentSlide > chapter.total_slides;
 
       const { error } = await supabase
         .from("teacher_progress")
@@ -224,7 +224,7 @@ export default function ChapterViewer() {
           <div
             className="bg-primary h-2 rounded-full transition-all"
             style={{ 
-              width: `${((currentSlide / (chapter?.total_slides || 1)) * 100)}%` 
+              width: `${(((currentSlide - 1) / (chapter?.total_slides || 1)) * 100)}%` 
             }}
           />
         </div>

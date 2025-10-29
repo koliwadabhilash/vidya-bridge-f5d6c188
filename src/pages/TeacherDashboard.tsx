@@ -208,84 +208,88 @@ const TeacherDashboard = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="space-y-6 pt-4">
+                      <Accordion type="multiple" className="w-full pt-4">
                         {grade.subjects.map((subject, subjectIndex) => (
-                          <div key={subjectIndex} className="space-y-3">
-                            <div className="flex items-center gap-2 px-2">
-                              <h4 className="font-semibold text-base">{subject.subject_name}</h4>
-                              <Badge variant="secondary" className="text-xs">
-                                {subject.chapters.length} chapters
-                              </Badge>
-                            </div>
-                            <div className="space-y-2 pl-4">
-                              {subject.chapters.map((chapter, chapterIndex) => (
-                                <Card
-                                  key={chapterIndex}
-                                  className={`transition-all ${
-                                    chapter.is_unlocked
-                                      ? 'hover:shadow-md cursor-pointer'
-                                      : 'opacity-50 cursor-not-allowed'
-                                  }`}
-                                >
-                                  <CardContent className="p-4">
-                                    <div className="flex items-start justify-between gap-4">
-                                      <div className="flex items-start gap-3 flex-1">
-                                        {chapter.is_unlocked ? (
-                                          chapter.is_completed ? (
-                                            <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                          <AccordionItem key={subjectIndex} value={`subject-${gradeIndex}-${subjectIndex}`}>
+                            <AccordionTrigger className="hover:no-underline px-2">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-base">{subject.subject_name}</h4>
+                                <Badge variant="secondary" className="text-xs">
+                                  {subject.chapters.length} chapters
+                                </Badge>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="space-y-2 pl-4 pt-4">
+                                {subject.chapters.map((chapter, chapterIndex) => (
+                                  <Card
+                                    key={chapterIndex}
+                                    className={`transition-all ${
+                                      chapter.is_unlocked
+                                        ? 'hover:shadow-md cursor-pointer'
+                                        : 'opacity-50 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <CardContent className="p-4">
+                                      <div className="flex items-start justify-between gap-4">
+                                        <div className="flex items-start gap-3 flex-1">
+                                          {chapter.is_unlocked ? (
+                                            chapter.is_completed ? (
+                                              <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                                            ) : (
+                                              <BookOpen className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                                            )
                                           ) : (
-                                            <BookOpen className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                                          )
-                                        ) : (
-                                          <Lock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                        )}
-                                         <div className="flex-1 min-w-0">
-                                           <h5 className="font-semibold text-sm mb-1">
-                                             Chapter {chapter.chapter_number}: {chapter.chapter_title}
-                                           </h5>
-                                          {chapter.is_unlocked && (
-                                            <div className="space-y-2 mt-2">
-                                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <span>{chapter.progress_percentage}% complete</span>
-                                                {chapter.is_completed && (
-                                                  <>
-                                                    <span>•</span>
-                                                    <Badge variant="default" className="text-xs">Completed</Badge>
-                                                  </>
-                                                )}
-                                              </div>
-                                              <Progress value={chapter.progress_percentage} className="h-2" />
-                                            </div>
+                                            <Lock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                                           )}
-                                          {!chapter.is_unlocked && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                              Complete the previous chapter to unlock
-                                            </p>
+                                           <div className="flex-1 min-w-0">
+                                             <h5 className="font-semibold text-sm mb-1">
+                                               Chapter {chapter.chapter_number}: {chapter.chapter_title}
+                                             </h5>
+                                            {chapter.is_unlocked && (
+                                              <div className="space-y-2 mt-2">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                  <span>{chapter.progress_percentage}% complete</span>
+                                                  {chapter.is_completed && (
+                                                    <>
+                                                      <span>•</span>
+                                                      <Badge variant="default" className="text-xs">Completed</Badge>
+                                                    </>
+                                                  )}
+                                                </div>
+                                                <Progress value={chapter.progress_percentage} className="h-2" />
+                                              </div>
+                                            )}
+                                            {!chapter.is_unlocked && (
+                                              <p className="text-xs text-muted-foreground mt-1">
+                                                Complete the previous chapter to unlock
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <div className="flex-shrink-0">
+                                          {chapter.is_unlocked ? (
+                                            <Button
+                                              size="sm"
+                                              onClick={() => navigate(`/teacher/chapter/${chapter.chapter_id}`)}
+                                            >
+                                              {chapter.is_completed ? 'Review' : 'Continue'}
+                                            </Button>
+                                          ) : (
+                                            <Badge variant="secondary" className="text-xs">
+                                              Locked
+                                            </Badge>
                                           )}
                                         </div>
                                       </div>
-                                      <div className="flex-shrink-0">
-                                        {chapter.is_unlocked ? (
-                                          <Button
-                                            size="sm"
-                                            onClick={() => navigate(`/teacher/chapter/${chapter.chapter_id}`)}
-                                          >
-                                            {chapter.is_completed ? 'Review' : 'Continue'}
-                                          </Button>
-                                        ) : (
-                                          <Badge variant="secondary" className="text-xs">
-                                            Locked
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
                         ))}
-                      </div>
+                      </Accordion>
                     </AccordionContent>
                   </AccordionItem>
                 ))}

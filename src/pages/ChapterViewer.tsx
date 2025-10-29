@@ -140,13 +140,43 @@ export default function ChapterViewer() {
     }
   };
 
-  const handleFinish = () => {
-    // Move past the last slide to mark as completed
-    setCurrentSlide((chapter?.total_slides || 0) + 1);
-    // Navigate back to dashboard after a brief moment
-    setTimeout(() => {
+  const handleFinish = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !chapter) return;
+
+      // Mark chapter as fully completed
+      const { error } = await supabase
+        .from("teacher_progress")
+        .upsert({
+          teacher_id: user.id,
+          chapter_id: chapterId,
+          current_slide: chapter.total_slides + 1,
+          completed_slides: chapter.total_slides,
+          is_completed: true,
+          last_viewed_at: new Date().toISOString(),
+          completed_at: new Date().toISOString()
+        }, {
+          onConflict: "teacher_id,chapter_id"
+        });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Chapter Completed!", 
+        description: "You've finished this chapter. Great job!" 
+      });
+
+      // Navigate back to dashboard
       navigate("/teacher-dashboard");
-    }, 500);
+    } catch (error: any) {
+      console.error("Error completing chapter:", error);
+      toast({ 
+        title: "Error", 
+        description: "Failed to save progress", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const getCurrentSlideData = () => {

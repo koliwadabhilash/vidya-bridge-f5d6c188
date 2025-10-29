@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Users, Lock, CheckCircle2 } from "lucide-react";
+import { BookOpen, Users, Lock, CheckCircle2, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -18,6 +18,8 @@ interface ChapterWithProgress {
   is_unlocked: boolean;
   is_completed: boolean;
   progress_percentage: number;
+  has_assessment: boolean;
+  assessment_id?: string;
 }
 
 interface SubjectWithChapters {
@@ -65,10 +67,30 @@ const TeacherDashboard = () => {
       return;
     }
 
+    // Fetch assessments for all chapters
+    const { data: assessmentsData } = await supabase
+      .from('assessments')
+      .select('id, chapter_id')
+      .in('chapter_id', chaptersData.map((c: ChapterWithProgress) => c.chapter_id));
+
+    // Create a map of chapter_id to assessment_id
+    const assessmentsMap = new Map<string, string>();
+    assessmentsData?.forEach((assessment) => {
+      assessmentsMap.set(assessment.chapter_id, assessment.id);
+    });
+
     // Organize data by Grade → Subject → Chapter hierarchy
     const gradesMap = new Map<string, GradeWithSubjects>();
 
     chaptersData.forEach((chapter: ChapterWithProgress) => {
+      // Add assessment info to chapter
+      const assessmentId = assessmentsMap.get(chapter.chapter_id);
+      const chapterWithAssessment = {
+        ...chapter,
+        has_assessment: !!assessmentId,
+        assessment_id: assessmentId
+      };
+
       if (!gradesMap.has(chapter.grade_name)) {
         gradesMap.set(chapter.grade_name, {
           grade_name: chapter.grade_name,
@@ -87,7 +109,7 @@ const TeacherDashboard = () => {
         grade.subjects.push(subject);
       }
 
-      subject.chapters.push(chapter);
+      subject.chapters.push(chapterWithAssessment);
     });
 
     // Sort chapters by chapter number
@@ -269,12 +291,29 @@ const TeacherDashboard = () => {
                                         </div>
                                         <div className="flex-shrink-0">
                                           {chapter.is_unlocked ? (
-                                            <Button
-                                              size="sm"
-                                              onClick={() => navigate(`/teacher/chapter/${chapter.chapter_id}`)}
-                                            >
-                                              {chapter.is_completed ? 'Review' : 'Continue'}
-                                            </Button>
+                                            <div className="flex gap-2">
+                                              <Button
+                                                size="sm"
+                                                variant={chapter.is_completed ? "outline" : "default"}
+                                                onClick={() => navigate(`/teacher/chapter/${chapter.chapter_id}`)}
+                                              >
+                                                {chapter.is_completed ? 'Review' : 'Continue'}
+                                              </Button>
+                                              {chapter.is_completed && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="default"
+                                                  onClick={() => navigate(
+                                                    chapter.has_assessment 
+                                                      ? `/teacher/assessment/${chapter.assessment_id}`
+                                                      : `/teacher/assessment/create/${chapter.chapter_id}`
+                                                  )}
+                                                >
+                                                  <FileText className="h-4 w-4 mr-1" />
+                                                  {chapter.has_assessment ? 'Update Assessment' : 'Create Assessment'}
+                                                </Button>
+                                              )}
+                                            </div>
                                           ) : (
                                             <Badge variant="secondary" className="text-xs">
                                               Locked

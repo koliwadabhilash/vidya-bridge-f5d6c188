@@ -9,6 +9,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import ChapterViewer from "./pages/ChapterViewer";
+import CreateAssessment from "./pages/CreateAssessment";
+import AssessmentMarks from "./pages/AssessmentMarks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
           <Route path="/teacher/chapter/:chapterId" element={<ChapterViewer />} />
+          <Route path="/teacher/assessment/create/:chapterId" element={<CreateAssessment />} />
+          <Route path="/teacher/assessment/:assessmentId" element={<AssessmentMarks />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

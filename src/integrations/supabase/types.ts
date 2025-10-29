@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      assessments: {
+        Row: {
+          assessment_name: string
+          chapter_id: string
+          created_at: string
+          id: string
+          pass_marks: number
+          teacher_id: string
+          total_marks: number
+          updated_at: string
+        }
+        Insert: {
+          assessment_name: string
+          chapter_id: string
+          created_at?: string
+          id?: string
+          pass_marks: number
+          teacher_id: string
+          total_marks: number
+          updated_at?: string
+        }
+        Update: {
+          assessment_name?: string
+          chapter_id?: string
+          created_at?: string
+          id?: string
+          pass_marks?: number
+          teacher_id?: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: true
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapter_slides: {
         Row: {
           chapter_id: string
@@ -175,6 +223,48 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_assessments: {
+        Row: {
+          assessment_id: string
+          created_at: string
+          id: string
+          marks_obtained: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_id: string
+          created_at?: string
+          id?: string
+          marks_obtained: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          marks_obtained?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_assessments_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {

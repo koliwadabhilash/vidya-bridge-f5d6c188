@@ -145,6 +145,8 @@ const AssessmentMarks = () => {
           assessment_id: assessmentId,
           student_id: studentId,
           marks_obtained: marks[studentId],
+        }, {
+          onConflict: 'assessment_id,student_id'
         });
 
       if (error) throw error;

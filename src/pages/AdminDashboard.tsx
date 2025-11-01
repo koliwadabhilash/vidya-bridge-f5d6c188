@@ -526,7 +526,6 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Roll Number</TableHead>
-                    <TableHead>Email</TableHead>
                     <TableHead>School</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -536,7 +535,6 @@ const AdminDashboard = () => {
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">{student.full_name}</TableCell>
                       <TableCell>{student.roll_number || "-"}</TableCell>
-                      <TableCell>{student.email}</TableCell>
                       <TableCell>{student.schools?.name || "-"}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button size="sm" variant="outline" onClick={() => setStudentModal({ open: true, student })}>

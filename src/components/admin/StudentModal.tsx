@@ -16,10 +16,9 @@ interface StudentModalProps {
 
 export function StudentModal({ open, onClose, student, onSuccess }: StudentModalProps) {
   const [name, setName] = useState(student?.full_name || "");
-  const [email, setEmail] = useState(student?.email || "");
   const [rollNumber, setRollNumber] = useState(student?.roll_number || "");
   const [schoolId, setSchoolId] = useState(student?.school_id || "");
-  const [gradeId, setGradeId] = useState("");
+  const [gradeId, setGradeId] = useState(student?.grade_id || "");
   const [schools, setSchools] = useState<any[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +64,8 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
         
         toast({ title: "Student updated successfully" });
       } else {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Generate email from name and roll number
+        const email = `${name.toLowerCase().replace(/\s+/g, '.')}${rollNumber}@student.edu`;
         
         const response = await supabase.functions.invoke('create-user', {
           body: {
@@ -87,7 +87,6 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
       onSuccess();
       onClose();
       setName("");
-      setEmail("");
       setRollNumber("");
       setSchoolId("");
       setGradeId("");
@@ -112,17 +111,6 @@ export function StudentModal({ open, onClose, student, onSuccess }: StudentModal
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={!!student}
                 required
               />
             </div>

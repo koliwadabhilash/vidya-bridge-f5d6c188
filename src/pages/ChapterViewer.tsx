@@ -98,6 +98,19 @@ export default function ChapterViewer() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !chapter) return;
 
+      // Check if chapter is already completed
+      const { data: existingProgress } = await supabase
+        .from("teacher_progress")
+        .select("is_completed")
+        .eq("teacher_id", user.id)
+        .eq("chapter_id", chapterId)
+        .maybeSingle();
+
+      // Don't update progress if chapter is already completed
+      if (existingProgress?.is_completed) {
+        return;
+      }
+
       const completedSlides = currentSlide - 1;
       const isCompleted = currentSlide > chapter.total_slides;
 

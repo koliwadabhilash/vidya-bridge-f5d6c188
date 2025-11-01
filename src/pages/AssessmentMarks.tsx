@@ -260,7 +260,7 @@ const AssessmentMarks = () => {
             <CardTitle>Assessment Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Marks</p>
                 <p className="text-2xl font-bold">{assessment.total_marks}</p>
@@ -269,23 +269,9 @@ const AssessmentMarks = () => {
                 <p className="text-sm text-muted-foreground">Pass Marks</p>
                 <p className="text-2xl font-bold">{assessment.pass_marks}</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Statistics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Students</p>
                 <p className="text-2xl font-bold">{stats.totalStudents}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Marks Entered</p>
-                <p className="text-2xl font-bold">{stats.marksEntered}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Passed</p>

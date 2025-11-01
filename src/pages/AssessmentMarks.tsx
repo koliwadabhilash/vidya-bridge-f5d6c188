@@ -117,11 +117,19 @@ const AssessmentMarks = () => {
   };
 
   const handleMarksChange = (studentId: string, value: string) => {
-    const numValue = parseInt(value);
-    if (value === "" || (numValue >= 0 && numValue <= (assessment?.total_marks || 0))) {
+    if (value === "") {
       setMarks((prev) => ({
         ...prev,
-        [studentId]: value === "" ? 0 : numValue,
+        [studentId]: 0,
+      }));
+      return;
+    }
+    
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= (assessment?.total_marks || 0)) {
+      setMarks((prev) => ({
+        ...prev,
+        [studentId]: numValue,
       }));
     }
   };
@@ -162,48 +170,6 @@ const AssessmentMarks = () => {
     }
   };
 
-  const saveAllMarks = async () => {
-    setIsSaving("all");
-    try {
-      const marksToSave = Object.entries(marks)
-        .filter(([studentId, mark]) => mark !== undefined && existingMarks[studentId] !== mark)
-        .map(([studentId, mark]) => ({
-          assessment_id: assessmentId,
-          student_id: studentId,
-          marks_obtained: mark,
-        }));
-
-      if (marksToSave.length === 0) {
-        toast({
-          title: "Info",
-          description: "No changes to save",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from("student_assessments")
-        .upsert(marksToSave);
-
-      if (error) throw error;
-
-      setExistingMarks({ ...marks });
-
-      toast({
-        title: "Success",
-        description: `Marks saved for ${marksToSave.length} student(s)`,
-      });
-    } catch (error) {
-      console.error("Error saving all marks:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save marks",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(null);
-    }
-  };
 
   const calculateStats = () => {
     const totalStudents = students.length;
@@ -333,7 +299,7 @@ const AssessmentMarks = () => {
                           <Button
                             size="sm"
                             onClick={() => saveMarks(student.id)}
-                            disabled={!hasChanges || studentMark === undefined || isSaving === student.id}
+                            disabled={!hasChanges || isSaving === student.id}
                           >
                             {isSaving === student.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -350,22 +316,6 @@ const AssessmentMarks = () => {
                   })}
                 </TableBody>
               </Table>
-
-              <div className="flex justify-end">
-                <Button onClick={saveAllMarks} disabled={isSaving === "all"}>
-                  {isSaving === "all" ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving All...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save All Marks
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
           </CardContent>
         </Card>
